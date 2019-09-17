@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace Timezone
 {
@@ -13,16 +14,40 @@ namespace Timezone
         {
             List<Tuple<string, string>> lReturn = new List<Tuple<string, string>>();
 
-            string[] fileParts = File.ReadAllText("Timezone.txt").Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (string part in fileParts)
+           
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Timezone.Timezone.txt"))
             {
-                string[] sLineParts = part.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (stream != null)
+                {
+                    using (BufferedStream bs = new BufferedStream(stream))
+                    {
 
-                Tuple<string, string> timeZone = new Tuple<string, string>(sLineParts.First(), sLineParts.Last());
+                        using (StreamReader sr = new StreamReader(bs))
+                        {
 
-                lReturn.Add(timeZone);
+                            string line;
+                            while ((line = sr.ReadLine()) != null)
+                            {
+                                string[] s = line.Split(new char[] { ' ' }, 2);
+                                Tuple<string, string> timeZone = new Tuple<string, string>(s.First(), s.Last());
+
+                                lReturn.Add(timeZone);
+
+
+                            }
+
+                        }
+                    }
+
+                }
+                else
+                {
+                    throw new ArgumentException("No resource with name " + "Timezone.txt");
+                }
+
+
             }
+          
 
             return lReturn;
         }
